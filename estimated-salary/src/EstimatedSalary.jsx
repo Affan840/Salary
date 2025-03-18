@@ -6,15 +6,24 @@ function EstimatedSalary() {
   const [location, setLocation] = useState("");
   const [yearsOfExperience, setYearsOfExperience] = useState("");
   const [estimatedSalary, setEstimatedSalary] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleEstimatedSalarySubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
     const salaryData = await fetchEstimatedSalaryData(
       jobTitle,
       location,
       yearsOfExperience
     );
-    setEstimatedSalary(salaryData);
+    setLoading(false);
+    if (salaryData) {
+      setEstimatedSalary(salaryData);
+    } else {
+      setError("Failed to fetch estimated salary data.");
+    }
   };
 
   async function fetchEstimatedSalaryData(jobTitle, location, yearsOfExperience) {
@@ -67,8 +76,10 @@ function EstimatedSalary() {
           <option value="SEVEN_TO_TEN">7-10 Years</option>
           <option value="TEN_PLUS">10+ Years</option>
         </select>
-        <button type="submit">Get Estimated Salary</button>
+        <button type="submit" disabled={loading}>Get Estimated Salary</button>
       </form>
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       {estimatedSalary && (
         <div>
           <h2>

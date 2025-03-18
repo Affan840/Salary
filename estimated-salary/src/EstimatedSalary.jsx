@@ -14,9 +14,27 @@ function EstimatedSalary() {
       location,
       yearsOfExperience
     );
-    console.log(salaryData);
     setEstimatedSalary(salaryData);
   };
+
+  async function fetchEstimatedSalaryData(jobTitle, location, yearsOfExperience) {
+    const url = `https://jsearch.p.rapidapi.com/estimated-salary?job_title=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}&location_type=ANY&years_of_experience=${encodeURIComponent(yearsOfExperience)}`;
+    const options = {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": "292ab28bcdmshb7ddb7eed20f132p130835jsn66c9bef19630", // Replace with your actual API key
+        "x-rapidapi-host": "jsearch.p.rapidapi.com",
+      },
+    };
+
+    try {
+      const response = await axios.get(url, options);
+      return response.data; // Return the entire result
+    } catch (error) {
+      console.error("Error fetching estimated salary data:", error);
+      return null; // Handle error appropriately
+    }
+  }
 
   return (
     <div>
@@ -73,25 +91,6 @@ function EstimatedSalary() {
       )}
     </div>
   );
-}
-async function fetchEstimatedSalaryData(jobTitle, location, yearsOfExperience) {
-  const body = JSON.stringify({ jobTitle, location, yearsOfExperience });
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/api/estimated-salary`,
-      body,
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching estimated salary data:", error);
-    return null; // Handle error appropriately
-  }
 }
 
 export default EstimatedSalary;

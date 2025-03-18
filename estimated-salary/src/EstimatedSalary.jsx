@@ -59,7 +59,7 @@ function EstimatedSalary() {
 }
 
 async function fetchEstimatedSalaryData(jobTitle, location, yearsOfExperience) {
-    const response = await fetch('http://localhost:5000/api/estimated-salary', {
+    const response = await fetch(`${import.meta.env.REACT_APP_API_URL}/api/estimated-salary`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

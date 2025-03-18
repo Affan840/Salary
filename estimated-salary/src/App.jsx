@@ -11,20 +11,13 @@ function App() {
                 <nav>
                     <ul>
                         <li>
-                            <Link to="/">Salary Estimator</Link>
+                            <Link to="">Estimated Salary</Link>
                         </li>
-                        <li>
-                            <Link to="/estimated-salary">Estimated Salary</Link>
-                        </li>
-                        <li>
-                            <Link to="/glassdoor">Glassdoor</Link>
-                        </li>
+
                     </ul>
                 </nav>
                 <Routes>
-                    <Route path="/" exact element={<JobFetcher/>} />
-                    <Route path="/estimated-salary" element={<EstimatedSalary/>} />
-                    <Route path="/glassdoor" element={<Glassdoor/>} />
+                    <Route path="/" element={<EstimatedSalary/>} />
                 </Routes>
             </div>
         </Router>

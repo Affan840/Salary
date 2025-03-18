@@ -26,8 +26,18 @@ function EstimatedSalary() {
     }
   };
 
-  async function fetchEstimatedSalaryData(jobTitle, location, yearsOfExperience) {
-    const url = `https://jsearch.p.rapidapi.com/estimated-salary?job_title=${encodeURIComponent(jobTitle)}&location=${encodeURIComponent(location)}&location_type=ANY&years_of_experience=${encodeURIComponent(yearsOfExperience)}`;
+  async function fetchEstimatedSalaryData(
+    jobTitle,
+    location,
+    yearsOfExperience
+  ) {
+    const url = `https://jsearch.p.rapidapi.com/estimated-salary?job_title=${encodeURIComponent(
+      jobTitle
+    )}&location=${encodeURIComponent(
+      location
+    )}&location_type=ANY&years_of_experience=${encodeURIComponent(
+      yearsOfExperience
+    )}`;
     const options = {
       method: "GET",
       headers: {
@@ -69,18 +79,20 @@ function EstimatedSalary() {
           required
         >
           <option value="">Select Years of Experience</option>
-          <option value="ZERO_TO_ONE">0-1 Year</option>
+          <option value="LESS_THAN_ONE">Less than 1 Year</option>
           <option value="ONE_TO_THREE">1-3 Years</option>
-          <option value="THREE_TO_FIVE">3-5 Years</option>
-          <option value="FIVE_TO_SEVEN">5-7 Years</option>
-          <option value="SEVEN_TO_TEN">7-10 Years</option>
-          <option value="TEN_PLUS">10+ Years</option>
+          <option value="FOUR_TO_SIX">4-6 Years</option>
+          <option value="SEVEN_TO_NINE">7-9 Years</option>
+          <option value="TEN_TO_FOURTEEN">10-14 Years</option>
+          <option value="ABOVE_FIFTEEN">15+ Years</option>
         </select>
-        <button type="submit" disabled={loading}>Get Estimated Salary</button>
+        <button type="submit" disabled={loading}>
+          Get Estimated Salary
+        </button>
       </form>
       {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {estimatedSalary && (
+      {!loading && error && <p style={{ color: "red" }}>{error}</p>}
+      {!loading && estimatedSalary && (
         <div>
           <h2>
             Estimated Salary for {jobTitle} in {location}:

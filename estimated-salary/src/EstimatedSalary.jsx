@@ -13,31 +13,59 @@ function EstimatedSalary() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const salaryData = await fetchEstimatedSalaryData(
-      jobTitle,
-      location,
-      yearsOfExperience
-    );
+    setEstimatedSalary(null);
+
+    const experienceCategory = mapYearsToCategory(parseInt(yearsOfExperience));
+    if (!experienceCategory) {
+      setError("Please enter a valid number of years.");
+      setLoading(false);
+      return;
+    }
+
+    // Split job titles by comma and trim spaces
+    const jobTitlesArray = jobTitle.split(",").map((title) => title.trim());
+
+    let maxSalaryData = null;
+
+    for (const title of jobTitlesArray) {
+      const salaryData = await fetchEstimatedSalaryData(title, location, experienceCategory);
+
+      if (salaryData && salaryData.data.length > 0) {
+        const medianSalary = salaryData.data[0].median_salary;
+        if (!maxSalaryData || medianSalary > maxSalaryData.median_salary) {
+          maxSalaryData = {
+            ...salaryData.data[0],
+            job_title: title,
+          };
+        }
+      }
+    }
+
     setLoading(false);
-    if (salaryData) {
-      setEstimatedSalary(salaryData);
+
+    if (maxSalaryData) {
+      setEstimatedSalary(maxSalaryData);
     } else {
-      setError("Failed to fetch estimated salary data.");
+      setError("No valid salary data found.");
     }
   };
 
-  async function fetchEstimatedSalaryData(
-    jobTitle,
-    location,
-    yearsOfExperience
-  ) {
+  // Map numeric input to API-supported experience categories
+  const mapYearsToCategory = (years) => {
+    if (years < 1) return "LESS_THAN_ONE";
+    if (years >= 1 && years <= 3) return "ONE_TO_THREE";
+    if (years >= 4 && years <= 6) return "FOUR_TO_SIX";
+    if (years >= 7 && years <= 9) return "SEVEN_TO_NINE";
+    if (years >= 10 && years <= 14) return "TEN_TO_FOURTEEN";
+    if (years >= 15) return "ABOVE_FIFTEEN";
+    return null;
+  };
+
+  async function fetchEstimatedSalaryData(jobTitle, location, experienceCategory) {
     const url = `https://jsearch.p.rapidapi.com/estimated-salary?job_title=${encodeURIComponent(
       jobTitle
-    )}&location=${encodeURIComponent(
-      location
-    )}&location_type=ANY&years_of_experience=${encodeURIComponent(
-      yearsOfExperience
-    )}`;
+    )}&location=${encodeURIComponent(location)}&location_type=ANY&years_of_experience=${experienceCategory}`;
+
     const options = {
       method: "GET",
       headers: {
@@ -48,10 +76,10 @@ function EstimatedSalary() {
 
     try {
       const response = await axios.get(url, options);
-      return response.data; // Return the entire result
+      return response.data;
     } catch (error) {
-      console.error("Error fetching estimated salary data:", error);
-      return null; // Handle error appropriately
+      console.error(`Error fetching salary for ${jobTitle}:`, error);
+      return null;
     }
   }
 
@@ -61,7 +89,7 @@ function EstimatedSalary() {
       <form onSubmit={handleEstimatedSalarySubmit}>
         <input
           type="text"
-          placeholder="Job Title"
+          placeholder="Job Titles (e.g., Java, Node, React)"
           value={jobTitle}
           onChange={(e) => setJobTitle(e.target.value)}
           required
@@ -73,19 +101,14 @@ function EstimatedSalary() {
           onChange={(e) => setLocation(e.target.value)}
           required
         />
-        <select
+        <input
+          type="number"
+          placeholder="Years of Experience"
           value={yearsOfExperience}
           onChange={(e) => setYearsOfExperience(e.target.value)}
           required
-        >
-          <option value="">Select Years of Experience</option>
-          <option value="LESS_THAN_ONE">Less than 1 Year</option>
-          <option value="ONE_TO_THREE">1-3 Years</option>
-          <option value="FOUR_TO_SIX">4-6 Years</option>
-          <option value="SEVEN_TO_NINE">7-9 Years</option>
-          <option value="TEN_TO_FOURTEEN">10-14 Years</option>
-          <option value="ABOVE_FIFTEEN">15+ Years</option>
-        </select>
+          min="0"
+        />
         <button type="submit" disabled={loading}>
           Get Estimated Salary
         </button>
@@ -95,19 +118,19 @@ function EstimatedSalary() {
       {!loading && estimatedSalary && (
         <div>
           <h2>
-            Estimated Salary for {jobTitle} in {location}:
+            Highest Estimated Salary for {estimatedSalary.job_title} in {location}:
           </h2>
-          <p>Min Salary: ${estimatedSalary.data[0].min_salary}</p>
-          <p>Max Salary: ${estimatedSalary.data[0].max_salary}</p>
-          <p>Median Salary: ${estimatedSalary.data[0].median_salary}</p>
+          <p>Min Salary: ${estimatedSalary.min_salary}</p>
+          <p>Max Salary: ${estimatedSalary.max_salary}</p>
+          <p>Median Salary: ${estimatedSalary.median_salary}</p>
           <p>
             Publisher:{" "}
             <a
-              href={estimatedSalary.data[0].publisher_link}
+              href={estimatedSalary.publisher_link}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {estimatedSalary.data[0].publisher_name}
+              {estimatedSalary.publisher_name}
             </a>
           </p>
         </div>

@@ -22,33 +22,40 @@ function EstimatedSalary() {
       return;
     }
 
-    // Split job titles by comma and trim spaces
-    const jobTitlesArray = jobTitle.split(",").map((title) => title.trim());
+    // Split job titles by comma and trim whitespace
+    const jobTitles = jobTitle.split(",").map((title) => title.trim());
 
-    let maxSalaryData = null;
+    let salaryResults = [];
 
-    for (const title of jobTitlesArray) {
-      const salaryData = await fetchEstimatedSalaryData(title, location, experienceCategory);
-      console.log(salaryData);
-      
-      if (salaryData && salaryData.data.length > 0) {
-        const medianSalary = salaryData.data[0].median_salary;
-        if (!maxSalaryData || medianSalary > maxSalaryData.median_salary) {
-          maxSalaryData = {
-            ...salaryData.data[0],
-            job_title: title,
-          };
-        }
+    for (const title of jobTitles) {
+      const salaryData = await fetchEstimatedSalaryData(
+        title,
+        location,
+        experienceCategory
+      );
+
+      // Check if the response is valid before adding it
+      if (salaryData && salaryData.data && salaryData.data.length > 0) {
+        salaryResults.push({
+          jobTitle: title,
+          ...salaryData.data[0], // Extracting salary details from API response
+        });
       }
     }
 
     setLoading(false);
 
-    if (maxSalaryData) {
-      setEstimatedSalary(maxSalaryData);
-    } else {
-      setError("No valid salary data found.");
+    if (salaryResults.length === 0) {
+      setError("No valid salary data found for the given job titles.");
+      return;
     }
+
+    // Find the job title with the highest median salary
+    const bestSalary = salaryResults.reduce((max, job) =>
+      job.median_salary > max.median_salary ? job : max
+    );
+
+    setEstimatedSalary(bestSalary);
   };
 
   // Map numeric input to API-supported experience categories
@@ -65,7 +72,9 @@ function EstimatedSalary() {
   async function fetchEstimatedSalaryData(jobTitle, location, experienceCategory) {
     const url = `https://jsearch.p.rapidapi.com/estimated-salary?job_title=${encodeURIComponent(
       jobTitle
-    )}&location=${encodeURIComponent(location)}&location_type=ANY&years_of_experience=${experienceCategory}`;
+    )}&location=${encodeURIComponent(
+      location
+    )}&location_type=ANY&years_of_experience=${experienceCategory}`;
 
     const options = {
       method: "GET",
@@ -79,7 +88,7 @@ function EstimatedSalary() {
       const response = await axios.get(url, options);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching salary for ${jobTitle}:`, error);
+      console.error(`Error fetching salary data for ${jobTitle}:`, error);
       return null;
     }
   }
@@ -90,7 +99,7 @@ function EstimatedSalary() {
       <form onSubmit={handleEstimatedSalarySubmit}>
         <input
           type="text"
-          placeholder="Job Titles (e.g., Java, Node, React)"
+          placeholder="Job Titles (comma separated)"
           value={jobTitle}
           onChange={(e) => setJobTitle(e.target.value)}
           required
@@ -119,7 +128,7 @@ function EstimatedSalary() {
       {!loading && estimatedSalary && (
         <div>
           <h2>
-            Highest Estimated Salary for {estimatedSalary.job_title} in {location}:
+            Highest Estimated Salary for {estimatedSalary.jobTitle} in {location}:
           </h2>
           <p>Min Salary: ${estimatedSalary.min_salary}</p>
           <p>Max Salary: ${estimatedSalary.max_salary}</p>

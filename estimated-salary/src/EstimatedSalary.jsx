@@ -29,7 +29,8 @@ function EstimatedSalary() {
 
     for (const title of jobTitlesArray) {
       const salaryData = await fetchEstimatedSalaryData(title, location, experienceCategory);
-
+      console.log(salaryData);
+      
       if (salaryData && salaryData.data.length > 0) {
         const medianSalary = salaryData.data[0].median_salary;
         if (!maxSalaryData || medianSalary > maxSalaryData.median_salary) {
